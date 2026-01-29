@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:attr="data-bs-theme=${preferences.theme}">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Doctor - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        html, body { height: 100%; }
+        footer { margin-top: auto; }
+    </style>
+</head>
+
+<body class="d-flex flex-column min-vh-100"
+      th:attr="style=|font-size: ${preferences.fontSize}px|">
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="/admin/dashboard">HealthLink Admin</a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="/admin/dashboard">Dashboard</a>
+            <a class="nav-link" href="/admin/users">Users</a>
+            <a class="nav-link active" href="/admin/doctors">Doctors</a>
+            <a class="nav-link" href="/admin/appointments">Appointments</a>
+            <a class="nav-link" href="/admin/reports">Reports</a>
+            <a class="nav-link" href="/admin/settings">Settings</a>
+            <form th:action="@{/logout}" method="post" class="d-inline ms-3">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button class="btn btn-outline-light btn-sm">Logout</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<!-- CONTENT -->
+<div class="container mt-4">
+    <h2>Edit Doctor</h2>
+
+    <!-- FIXED: Changed from /update to /edit -->
+    <form th:object="${doctor}"
+          th:action="@{'/admin/doctors/' + ${doctor.id} + '/edit'}"
+          method="post">
+
+        <!-- CSRF token -->
+        <input type="hidden"
+               th:name="${_csrf.parameterName}"
+               th:value="${_csrf.token}" />
+
+        <!-- Hidden ID field (already included via th:object) -->
+
+        <!-- First + Last Name -->
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">First Name</label>
+                <input class="form-control" th:field="*{firstName}" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Last Name</label>
+                <input class="form-control" th:field="*{lastName}" required>
+            </div>
+        </div>
+
+        <!-- Specialization -->
+        <div class="mb-3">
+            <label class="form-label">Specialization</label>
+            <input class="form-control" th:field="*{specialization}" required>
+        </div>
+
+        <!-- Email -->
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input class="form-control" th:field="*{email}" required>
+        </div>
+
+        <!-- Phone -->
+        <div class="mb-3">
+            <label class="form-label">Phone</label>
+            <input class="form-control" th:field="*{phone}" required>
+        </div>
+
+        <!-- Buttons -->
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="/admin/doctors" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+
+<!-- FOOTER -->
+<footer class="text-center mt-5 mb-3 text-muted small">
+    © 2025 HealthLink Clinic System
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

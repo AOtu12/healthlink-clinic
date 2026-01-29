@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:attr="data-bs-theme=${preferences != null ? preferences.theme : 'light'}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Doctor Dashboard | HealthLink Clinic</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        /* Gradient background for doctor info and statistic cards */
+        .mauve-gradient {
+            background: linear-gradient(135deg, #8B5FBF 0%, #6b4097 50%, #8B5FBF 100%);
+            color: white;
+            border: none;
+        }
+
+        .mauve-gradient-light {
+            background: linear-gradient(135deg, #8B5FBF 0%, #6b4097 50%, #8B5FBF 100%);
+            color: white;
+            border: none;
+        }
+
+        .black-header {
+            background-color: #000000 !important;
+            color: white;
+        }
+
+        .mauve-gradient h5,
+        .mauve-gradient h6,
+        .mauve-gradient .card-title,
+        .mauve-gradient .text-muted {
+            color: white !important;
+        }
+
+        .mauve-gradient-light h5,
+        .mauve-gradient-light h6,
+        .mauve-gradient-light .card-title,
+        .mauve-gradient-light .text-muted {
+            color: white !important;
+        }
+
+        #doctorJoke {
+            transition: opacity 0.3s ease;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        footer {
+            margin-top: auto;
+        }
+    </style>
+</head>
+
+<!-- ⭐ Footer fixed here -->
+<body class="bg-body d-flex flex-column min-vh-100"
+      th:attr="style=|font-size: ${preferences != null ? preferences.fontSize : 16}px|">
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg shadow-sm black-header">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold text-white" href="#">HealthLink Clinic</a>
+
+        <div class="d-flex align-items-center">
+            <a href="/settings/doctorpreferences" class="btn btn-outline-light btn-sm me-2">⚙️ Settings</a>
+
+            <form th:action="@{/logout}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-light btn-sm">🚪 Logout</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+
+    <h2 class="mb-4 text-center">Doctor Dashboard</h2>
+
+    <!-- Doctor Info -->
+    <div class="card mb-4 shadow-sm mauve-gradient">
+        <div class="card-body">
+            <h5 class="card-title"
+                th:text="'Welcome, Dr. ' + ${doctor.firstName} + ' ' + ${doctor.lastName}">
+                Dr. John Doe
+            </h5>
+
+            <p class="card-text mb-0">
+                <strong>Specialization:</strong> <span th:text="${doctor.specialization}"></span><br>
+                <strong>Email:</strong> <span th:text="${doctor.email}"></span><br>
+                <strong>Phone:</strong> <span th:text="${doctor.phone}"></span>
+            </p>
+        </div>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="row mb-4 text-center">
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm mauve-gradient-light">
+                <div class="card-body">
+                    <h6 class="text-muted">Today's Appointments</h6>
+                    <h3 th:text="${todayCount}">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm mauve-gradient-light">
+                <div class="card-body">
+                    <h6 class="text-muted">Upcoming Appointments</h6>
+                    <h3 th:text="${upcomingCount}">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm mauve-gradient-light">
+                <div class="card-body">
+                    <h6 class="text-muted">Unique Patients</h6>
+                    <h3 th:text="${patientsCount}">0</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TODAY'S APPOINTMENTS TABLE -->
+    <div class="card shadow-sm">
+        <div class="card-header black-header">
+            <h5 class="mb-0 text-white">
+                Today's Appointments (<span th:text="${todayDate}"></span>)
+            </h5>
+        </div>
+
+        <div class="card-body">
+
+            <table class="table table-hover align-middle">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Patient</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th>Notes</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+
+                <tbody>
+
+                <tr th:each="appt, iter : ${todayAppointments}">
+                    <td th:text="${iter.count}">1</td>
+                    <td th:text="${appt.patient.fullName}"></td>
+                    <td th:text="${appt.appointmentTime}"></td>
+
+                    <td>
+                        <span th:text="${appt.status.name()}"
+                              th:class="${
+                                    appt.status.name() == 'COMPLETED' ? 'badge bg-success' :
+                                    (appt.status.name() == 'NO_SHOW' ? 'badge bg-danger' :
+                                     'badge bg-warning text-dark')
+                              }">
+                        </span>
+                    </td>
+
+                    <td th:text="${appt.notes}"></td>
+
+                    <td>
+                        <form th:action="@{'/doctor/appointments/' + ${appt.id} + '/status'}"
+                              method="post" class="d-flex">
+
+                            <select name="status" class="form-select form-select-sm me-2">
+                                <option th:each="st : ${appointmentStatuses}"
+                                        th:value="${st}"
+                                        th:text="${st}">
+                                </option>
+                            </select>
+
+                            <button type="submit" class="btn btn-sm btn-success">Update</button>
+                        </form>
+                    </td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(todayAppointments)}">
+                    <td colspan="6" class="text-center text-muted">No appointments scheduled today.</td>
+                </tr>
+
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+    <!-- JOKE WIDGET -->
+    <div class="card shadow-sm mt-4"
+         style="background: linear-gradient(135deg,#FF8EC7 0%,#B57BD7 50%,#E48FFF 100%);
+                color:white; border:none; border-radius:12px;">
+
+        <div class="card-body">
+            <h5 class="fw-bold">🤣 Daily Doctor Humor</h5>
+
+            <p id="doctorJoke"
+               style="font-size:18px; font-weight:500; min-height:40px;">
+            </p>
+        </div>
+    </div>
+
+</div>
+
+<footer class="text-center mt-4 mb-3 text-muted small">
+    &copy; 2025 HealthLink Clinic System
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    const jokes = [
+        "Why did the doctor carry a red pen? In case they needed to draw blood!",
+        "My doctor told me I’m going deaf. The news was hard for me to hear.",
+        "Why did the math book go to the doctor? It had too many problems.",
+        "Doctor: 'You need exercise.' Me: 'Does running late count as cardio?'",
+        "Patient: 'Doc, I feel invisible.' Doctor: 'Who said that?'",
+        "Why did the skeleton go to the doctor? To get a backbone!",
+        "Doctor: 'Don't worry, it's a small surgery.' Patient: 'For YOU!'"
+    ];
+
+    function loadJoke() {
+        const jokeBox = document.getElementById("doctorJoke");
+        const idx = Math.floor(Math.random() * jokes.length);
+
+        jokeBox.style.opacity = 0;
+
+        setTimeout(() => {
+            jokeBox.innerText = jokes[idx];
+            jokeBox.style.opacity = 1;
+        }, 300);
+    }
+
+    setInterval(loadJoke, 6000);
+    loadJoke();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:attr="data-bs-theme=${preferences.theme}">
+
+<head>
+    <title>Schedule Appointment - HealthLink Clinic</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* REMOVE fixed light background so dark mode works */
+        /* body { background-color: #f8f9fa; } */
+
+        .gradient-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .form-card {
+            background: var(--bs-body-bg); /* Automatically adjusts for dark/light */
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border: none;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+    </style>
+</head>
+
+<body class="d-flex flex-column min-vh-100"
+      th:attr="style=|font-size: ${preferences.fontSize}px|">
+
+<!-- ====================== NAVBAR ====================== -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="/dashboard">HealthLink Clinic</a>
+
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="/dashboard">Dashboard</a>
+            <a class="nav-link" href="/patients">Patients</a>
+            <a class="nav-link" href="/doctors">Doctors</a>
+            <a class="nav-link active" href="/appointments">Appointments</a>
+            <a class="nav-link" href="/appointments/availability">Doctor Availability</a>
+            <a class="nav-link" href="/settings/preferences">Settings</a>
+
+            <form th:action="@{/logout}" method="post" class="d-inline">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<!-- ====================== MAIN CONTENT (Pushes footer down) ====================== -->
+<main class="container mt-4 flex-grow-1">
+
+    <div class="gradient-header">
+        <h1 th:text="${appointment.id != null} ? 'Edit Appointment' : 'Schedule New Appointment'">
+            Schedule New Appointment
+        </h1>
+    </div>
+
+    <div class="form-card">
+
+        <form th:action="@{/appointments}" method="post">
+            <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+
+            <input th:if="${appointment.id != null}" type="hidden" name="id" th:value="${appointment.id}" />
+
+            <!-- Patient + Doctor -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Patient</label>
+                    <select class="form-select" name="patient.id" required>
+                        <option value="">Select Patient</option>
+
+                        <option th:each="p : ${patients}"
+                                th:value="${p.id}"
+                                th:text="${p.firstName + ' ' + p.lastName}"
+                                th:selected="${appointment.patient != null and appointment.patient.id == p.id}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Doctor</label>
+                    <select class="form-select" name="doctor.id" required>
+                        <option value="">Select Doctor</option>
+
+                        <option th:each="d : ${doctors}"
+                                th:value="${d.id}"
+                                th:text="${d.firstName + ' ' + d.lastName + ' - ' + d.specialization}"
+                                th:selected="${appointment.doctor != null and appointment.doctor.id == d.id}">
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Date + Time -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control"
+                           name="appointmentDate"
+                           th:value="${appointment.appointmentDate}" required>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Time</label>
+                    <input type="time" class="form-control"
+                           name="appointmentTime"
+                           th:value="${appointment.appointmentTime != null ? #temporals.format(appointment.appointmentTime, 'HH:mm') : ''}"
+                           required>
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" name="status">
+                        <option value="SCHEDULED" th:selected="${appointment.status == 'SCHEDULED'}">Scheduled</option>
+                        <option value="COMPLETED" th:selected="${appointment.status == 'COMPLETED'}">Completed</option>
+                        <option value="CANCELLED" th:selected="${appointment.status == 'CANCELLED'}">Cancelled</option>
+                        <option value="NO_SHOW" th:selected="${appointment.status == 'NO_SHOW'}">No Show</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="mb-3">
+                <label class="form-label">Notes</label>
+                <textarea class="form-control" name="notes" rows="3"
+                          placeholder="Add appointment notes here..."
+                          th:text="${appointment.notes}"></textarea>
+            </div>
+
+            <!-- Buttons -->
+            <div class="d-flex justify-content-end mt-3">
+                <a href="/appointments" class="btn btn-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <span th:text="${appointment.id != null} ? 'Update Appointment' : 'Save Appointment'">
+                    </span>
+                </button>
+            </div>
+
+        </form>
+    </div>
+</main>
+
+<!-- ====================== FOOTER ====================== -->
+<footer class="text-center mt-5 mb-3 text-muted small">
+    &copy; 2025 HealthLink Clinic System
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
